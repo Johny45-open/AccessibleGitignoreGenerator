@@ -1,0 +1,9 @@
+TEMPLATE = {
+    "header": "Windows",
+    "rules": [
+        "Thumbs.db",
+        "ehthumbs.db",
+        "Desktop.ini",
+        "$RECYCLE.BIN/",
+    ],
+}
