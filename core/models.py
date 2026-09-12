@@ -64,6 +64,7 @@ class DataOption(Enum):
     TEMP = auto()
     CACHE = auto()
     LOGS = auto()
+    AI_ML = auto()
     NEVIM = auto()
 
 

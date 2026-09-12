@@ -13,6 +13,7 @@ from templates.unittest_tpl import TEMPLATE as UNITTEST_TPL
 from templates.pyinstaller import TEMPLATE as PYINSTALLER_TPL
 from templates.nuitka import TEMPLATE as NUITKA_TPL
 from templates.jupyter import JUPYTER_RULES, DATASET_RULES, TEMP_RULES, CACHE_RULES, LOGS_RULES
+from templates.ai_ml import TEMPLATE_AI_ML
 from templates.secrets import TEMPLATE_ENV, TEMPLATE_ENV_STAR, TEMPLATE_CONFIG_LOCAL
 
 
@@ -94,6 +95,8 @@ def generate(config: WizardConfig) -> str:
             add_section(CACHE_RULES["header"], CACHE_RULES["rules"])
         if DataOption.LOGS in config.data_options:
             add_section(LOGS_RULES["header"], LOGS_RULES["rules"])
+        if DataOption.AI_ML in config.data_options:
+            add_section(TEMPLATE_AI_ML["header"], TEMPLATE_AI_ML["rules"])
 
     # Secrets
     if config.secret_answer == SecretAnswer.ANO:

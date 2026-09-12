@@ -114,3 +114,66 @@ def test_empty_custom_rule_not_added():
     out = generate(cfg)
     # Should not crash, empty rule ignored
     assert "   " not in out or out.strip() != ""
+
+
+def test_ai_ml_only():
+    cfg = WizardConfig(project_type=ProjectType.GENERIC, include_windows=False, data_options={DataOption.AI_ML})
+    out = generate(cfg)
+    assert "# AI / Machine Learning modely" in out
+    assert "*.pth" in out
+    assert "*.pt" in out
+    assert "*.onnx" in out
+    assert "*.ckpt" in out
+    assert "*.safetensors" in out
+    assert ".EasyOCR/" in out
+    # nesmi obsahovat prilis obecne pravidlo
+    assert "\nmodels/\n" not in out
+    assert out.count("*.pth") == 1
+
+
+def test_ai_ml_not_included_by_default():
+    cfg = WizardConfig(project_type=ProjectType.PYTHON, include_windows=False, data_options=set())
+    out = generate(cfg)
+    assert "*.pth" not in out
+    assert "*.onnx" not in out
+    assert ".EasyOCR/" not in out
+    assert "# AI / Machine Learning modely" not in out
+
+
+def test_ai_ml_nevim_conservative():
+    cfg = WizardConfig(project_type=ProjectType.UNKNOWN, data_options={DataOption.NEVIM}, include_windows=False)
+    out = generate(cfg)
+    assert "*.pth" not in out
+    assert ".EasyOCR/" not in out
+
+
+def test_ai_ml_with_python_cache_no_dup():
+    cfg = WizardConfig(project_type=ProjectType.PYTHON, data_options={DataOption.CACHE, DataOption.AI_ML}, include_windows=False)
+    out = generate(cfg)
+    assert "__pycache__/" in out
+    assert ".cache/" in out
+    assert "*.pth" in out
+    assert out.count("*.pth") == 1
+    assert out.count(".cache/") == 1
+    assert "# Python" in out
+    assert "# Cache" in out
+    assert "# AI / Machine Learning modely" in out
+
+
+def test_ai_ml_dedup_custom():
+    # Custom pravidlo duplikujici AI/ML extenzi se nema duplikovat
+    cfg = WizardConfig(project_type=ProjectType.GENERIC, include_windows=False,
+                       data_options={DataOption.AI_ML},
+                       custom_rules=[CustomRule("*.pth", "duplikat"), CustomRule("my_models/", "")])
+    out = generate(cfg)
+    assert out.count("*.pth") == 1
+    assert "my_models/" in out
+
+
+def test_ai_ml_combined_with_dataset_and_logs():
+    cfg = WizardConfig(project_type=ProjectType.PYTHON, data_options={DataOption.DATASET, DataOption.LOGS, DataOption.AI_ML}, include_windows=False)
+    out = generate(cfg)
+    assert "data/" in out
+    assert "*.log" in out
+    assert "*.pth" in out
+    assert ".EasyOCR/" in out

@@ -37,6 +37,20 @@ class DataPage(BasePage):
         self.cb_logs.setAccessibleName("Záznamy běhu (logy)")
         self.layout_.addWidget(self.cb_logs)
 
+        self.cb_aiml = QCheckBox("AI / Machine Learning modely (EasyOCR, PyTorch, ONNX)")
+        self.cb_aiml.setAccessibleName("AI / Machine Learning modely")
+        self.cb_aiml.setAccessibleDescription(
+            "Lokálně stažené nebo generované modely, váhy a checkpointy: *.pth, *.pt, *.onnx, *.ckpt, *.safetensors, .EasyOCR/. "
+            "Volitelné, nezaškrtávejte pokud mají být modely součástí repozitáře."
+        )
+        self.layout_.addWidget(self.cb_aiml)
+        lbl_aiml = QLabel(
+            "Lokální modely a váhy stahované za běhu, například EasyOCR (.EasyOCR/), PyTorch (*.pth, *.pt, *.ckpt) nebo ONNX (*.onnx, *.safetensors). "
+            "Neignoruje obecné složky jako models/."
+        )
+        lbl_aiml.setWordWrap(True)
+        self.layout_.addWidget(lbl_aiml)
+
         self.cb_nevim = QCheckBox("Nevím – přeskočit tuto část")
         self.cb_nevim.setAccessibleName("Nevím – přeskočit tuto část")
         self.cb_nevim.toggled.connect(self.on_nevim)
@@ -50,7 +64,7 @@ class DataPage(BasePage):
         self.set_first_widget(self.cb_jupyter)
 
     def on_nevim(self, checked):
-        for cb in [self.cb_jupyter, self.cb_dataset, self.cb_temp, self.cb_cache, self.cb_logs]:
+        for cb in [self.cb_jupyter, self.cb_dataset, self.cb_temp, self.cb_cache, self.cb_logs, self.cb_aiml]:
             if checked:
                 cb.setChecked(False)
                 cb.setEnabled(False)
@@ -60,7 +74,11 @@ class DataPage(BasePage):
     def show_help(self):
         HelpDialog(self, "Co jsou data a cache?",
                    "Některé projekty pracují s velkými daty, dočasnými soubory nebo záznamy běhu (logy). "
-                   "Mezipaměť (cache) jsou dočasně uložené výsledky pro zrychlení. Většinou tyto soubory do Gitu nepatří.").exec()
+                   "Mezipaměť (cache) jsou dočasně uložené výsledky pro zrychlení. Většinou tyto soubory do Gitu nepatří.\n\n"
+                   "AI / Machine Learning modely: lokálně stažené nebo generované váhy a checkpointy "
+                   "(EasyOCR ukládá modely do .EasyOCR/, PyTorch používá *.pth, *.pt, *.ckpt, ONNX *.onnx, Hugging Face *.safetensors). "
+                   "Tento profil je volitelný – nezaškrtávejte jej, pokud mají být modely součástí repozitáře. "
+                   "Neobsahuje obecné pravidlo models/, aby neignoroval legitimní zdrojové soubory.").exec()
 
     def get_config_updates(self, config):
         s = set()
@@ -77,6 +95,8 @@ class DataPage(BasePage):
                 s.add(DataOption.CACHE)
             if self.cb_logs.isChecked():
                 s.add(DataOption.LOGS)
+            if self.cb_aiml.isChecked():
+                s.add(DataOption.AI_ML)
         config.data_options = s
 
     def load_from_config(self, config):
@@ -85,4 +105,5 @@ class DataPage(BasePage):
         self.cb_temp.setChecked(DataOption.TEMP in config.data_options)
         self.cb_cache.setChecked(DataOption.CACHE in config.data_options)
         self.cb_logs.setChecked(DataOption.LOGS in config.data_options)
+        self.cb_aiml.setChecked(DataOption.AI_ML in config.data_options)
         self.cb_nevim.setChecked(DataOption.NEVIM in config.data_options)
