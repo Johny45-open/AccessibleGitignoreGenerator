@@ -1,6 +1,8 @@
 from PyQt6.QtWidgets import QLabel, QPushButton, QListWidget, QHBoxLayout, QWidget, QVBoxLayout, QMessageBox
+from PyQt6.QtCore import QTimer, Qt
 from ui.pages.base_page import BasePage
 from ui.dialogs import CustomRuleDialog
+from ui.accessibility import announce, show_accessible_warning
 from core.models import CustomRule
 
 
@@ -9,6 +11,7 @@ class CustomRulesPage(BasePage):
         super().__init__("Krok 8 – Vlastní pravidla", parent)
         desc = QLabel("Můžete přidat vlastní pravidla, která nejsou v průvodci. Například: secrets/ nebo my_local_data/")
         desc.setWordWrap(True)
+        desc.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         desc.setAccessibleName("Můžete přidat vlastní pravidla, která nejsou v průvodci.")
         self.layout_.addWidget(desc)
 
@@ -17,16 +20,25 @@ class CustomRulesPage(BasePage):
         self.list_widget.setAccessibleDescription("Seznam vlastních pravidel, která budou přidána do .gitignore")
         self.layout_.addWidget(self.list_widget)
 
+        # PKIE statusLabel
+        self.status_label = QLabel("")
+        self.status_label.setWordWrap(True)
+        self.status_label.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.status_label.hide()
+        self.layout_.addWidget(self.status_label)
+
         btn_row = QWidget()
         btn_row_layout = QHBoxLayout(btn_row)
         btn_row_layout.setContentsMargins(0, 0, 0, 0)
         self.btn_add = QPushButton("Přidat vlastní pravidlo")
         self.btn_add.setAccessibleName("Přidat vlastní pravidlo")
+        self.btn_add.setAccessibleDescription("Otevřít dialog pro přidání pravidla")
         self.btn_add.clicked.connect(self.on_add)
         btn_row_layout.addWidget(self.btn_add)
 
         self.btn_remove = QPushButton("Odebrat vybrané")
         self.btn_remove.setAccessibleName("Odebrat vybrané pravidlo")
+        self.btn_remove.setAccessibleDescription("Odebrat vybrané pravidlo ze seznamu")
         self.btn_remove.clicked.connect(self.on_remove)
         btn_row_layout.addWidget(self.btn_remove)
         btn_row_layout.addStretch()
@@ -46,14 +58,33 @@ class CustomRulesPage(BasePage):
             display = f"{pattern}" + (f"  # {comment}" if comment else "")
             self.list_widget.addItem(display)
             self.list_widget.setCurrentRow(self.list_widget.count() - 1)
+            self.list_widget.setFocus()
+            msg = f"Přidáno pravidlo: {pattern}. Celkem {len(self._rules)}."
+            self.status_label.setText(msg)
+            self.status_label.setAccessibleName(msg)
+            self.status_label.show()
+            announce(msg, self)
+        else:
+            # dialog zrusen – fokus uz obnovil CustomRuleDialog.done, jen oznamit
+            announce("Přidání zrušeno", self)
 
     def on_remove(self):
         row = self.list_widget.currentRow()
         if row >= 0:
+            pat = self._rules[row].pattern
             self.list_widget.takeItem(row)
             del self._rules[row]
+            msg = f"Odebráno pravidlo: {pat}. Zbývá {len(self._rules)}."
+            self.status_label.setText(msg)
+            self.status_label.setAccessibleName(msg)
+            self.status_label.show()
+            announce(msg, self)
+            if self.list_widget.count() > 0:
+                self.list_widget.setFocus()
+            else:
+                self.btn_add.setFocus()
         else:
-            QMessageBox.information(self, "Informace", "Vyberte pravidlo k odebrání.")
+            show_accessible_warning(self, "Informace", "Vyberte pravidlo k odebrání.")
 
     def get_config_updates(self, config):
         config.custom_rules = list(self._rules)

@@ -1,5 +1,5 @@
-from PyQt6.QtWidgets import QRadioButton, QLabel, QPushButton, QButtonGroup, QCheckBox, QLineEdit, QWidget, QVBoxLayout
-from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QApplication, QRadioButton, QLabel, QPushButton, QButtonGroup, QCheckBox, QLineEdit, QWidget, QVBoxLayout
+from PyQt6.QtCore import QTimer, Qt
 from ui.pages.base_page import BasePage
 from ui.dialogs import HelpDialog
 from core.models import SecretAnswer, SecretOption
@@ -11,6 +11,7 @@ class SecretsAnswerPage(BasePage):
         q = QLabel("Obsahuje projekt místní tajné nebo soukromé nastavení?")
         q.setWordWrap(True)
         q.setAccessibleName("Obsahuje projekt místní tajné nebo soukromé nastavení?")
+        q.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.layout_.addWidget(q)
         desc = QLabel("Například hesla, klíče nebo soubor .env s nastavením jen pro váš počítač.")
         desc.setWordWrap(True)
@@ -34,16 +35,21 @@ class SecretsAnswerPage(BasePage):
         self.radio_nevim.setChecked(True)
 
         help_btn = QPushButton("Co to znamená?")
+        help_btn.setAccessibleDescription("Zobrazit nápovědu")
         help_btn.setAccessibleName("Co to znamená? - tajné soubory")
         help_btn.clicked.connect(self.show_help)
         self.layout_.addWidget(help_btn)
+        self._help_btn = help_btn
         self.layout_.addStretch()
         self.set_first_widget(self.radio_ano)
 
     def show_help(self):
+        prev = QApplication.focusWidget()
         HelpDialog(self, "Co jsou tajné soubory?",
                    "Některé soubory obsahují hesla nebo klíče jen pro váš počítač, například .env. "
                    "Ty by neměly být v Gitu. Upozornění: .gitignore neochrání soubor, který už byl do Gitu přidán.").exec()
+        if prev is not None:
+            QTimer.singleShot(0, prev.setFocus)
 
     def get_config_updates(self, config):
         if self.radio_ano.isChecked():
@@ -63,6 +69,7 @@ class SecretsOptionsPage(BasePage):
         super().__init__("Krok 7b – Jaké tajné soubory?", parent)
         q = QLabel("Vyberte, co chcete ignorovat:")
         q.setWordWrap(True)
+        q.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         q.setAccessibleName("Vyberte, co chcete ignorovat:")
         self.layout_.addWidget(q)
 

@@ -1,5 +1,5 @@
-from PyQt6.QtWidgets import QRadioButton, QLabel, QPushButton, QButtonGroup, QComboBox, QLineEdit, QHBoxLayout, QWidget
-from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QRadioButton, QLabel, QPushButton, QButtonGroup, QComboBox, QLineEdit, QHBoxLayout, QWidget, QApplication
+from PyQt6.QtCore import Qt, QTimer
 from ui.pages.base_page import BasePage
 from ui.dialogs import HelpDialog
 from core.models import VenvAnswer, VenvChoice
@@ -10,6 +10,7 @@ class VenvAnswerPage(BasePage):
         super().__init__("Krok 2 – Prostředí Pythonu", parent)
         q = QLabel("Má tento projekt vlastní oddělené prostředí pro Python balíčky?")
         q.setWordWrap(True)
+        q.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         q.setAccessibleName("Má tento projekt vlastní oddělené prostředí pro Python balíčky?")
         self.layout_.addWidget(q)
         desc = QLabel("Virtuální prostředí umožňuje mít pro každý projekt samostatné verze balíčků.")
@@ -37,15 +38,20 @@ class VenvAnswerPage(BasePage):
 
         help_btn = QPushButton("Co to znamená?")
         help_btn.setAccessibleName("Co to znamená? - virtuální prostředí")
+        help_btn.setAccessibleDescription("Zobrazit nápovědu k virtuálnímu prostředí")
         help_btn.clicked.connect(self.show_help)
         self.layout_.addWidget(help_btn)
+        self._help_btn = help_btn
         self.layout_.addStretch()
         self.set_first_widget(self.radio_ano)
 
     def show_help(self):
+        prev = QApplication.focusWidget()
         HelpDialog(self, "Co je virtuální prostředí?",
                    "Virtuální prostředí je složka, kde má projekt vlastní kopie Python balíčků. "
                    "Běžné názvy jsou .venv nebo venv. Pokud nevíte, zvolte Nevím – nic se nepřidá.").exec()
+        if prev is not None:
+            QTimer.singleShot(0, prev.setFocus)
 
     def get_config_updates(self, config):
         if self.radio_ano.isChecked():
@@ -65,6 +71,7 @@ class VenvNamePage(BasePage):
         super().__init__("Krok 2b – Název prostředí", parent)
         q = QLabel("Jak se vaše virtuální prostředí jmenuje?")
         q.setWordWrap(True)
+        q.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         q.setAccessibleName("Jak se vaše virtuální prostředí jmenuje?")
         self.layout_.addWidget(q)
 

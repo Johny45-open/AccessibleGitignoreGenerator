@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel
-from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import QTimer, Qt
 
 
 class BasePage(QWidget):
@@ -13,7 +13,10 @@ class BasePage(QWidget):
         title_label = QLabel(f"<h2>{title}</h2>")
         title_label.setAccessibleName(title)
         title_label.setWordWrap(True)
+        # PKIE vzor: titul je focusable aby ho NVDA precetl pri vstupu na stranku
+        title_label.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.layout_.addWidget(title_label)
+        self.title_label = title_label
         self._first_widget = None
 
     def set_first_widget(self, w: QWidget):

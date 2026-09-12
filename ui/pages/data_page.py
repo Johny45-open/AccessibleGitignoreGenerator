@@ -1,4 +1,5 @@
-from PyQt6.QtWidgets import QCheckBox, QLabel, QPushButton
+from PyQt6.QtCore import QTimer, Qt
+from PyQt6.QtWidgets import QApplication, QCheckBox, QLabel, QPushButton
 from ui.pages.base_page import BasePage
 from ui.dialogs import HelpDialog
 from core.models import DataOption
@@ -10,6 +11,7 @@ class DataPage(BasePage):
         q = QLabel("Co všechno váš projekt používá nebo vytváří? Zaškrtněte co platí.")
         q.setWordWrap(True)
         q.setAccessibleName("Co všechno váš projekt používá nebo vytváří?")
+        q.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.layout_.addWidget(q)
 
         self.cb_jupyter = QCheckBox("Interaktivní dokumenty (Jupyter Notebook)")
@@ -57,9 +59,11 @@ class DataPage(BasePage):
         self.layout_.addWidget(self.cb_nevim)
 
         help_btn = QPushButton("Vysvětlit")
+        help_btn.setAccessibleDescription("Zobrazit nápovědu")
         help_btn.setAccessibleName("Vysvětlit - data a cache")
         help_btn.clicked.connect(self.show_help)
         self.layout_.addWidget(help_btn)
+        self._help_btn = help_btn
         self.layout_.addStretch()
         self.set_first_widget(self.cb_jupyter)
 
@@ -72,6 +76,7 @@ class DataPage(BasePage):
                 cb.setEnabled(True)
 
     def show_help(self):
+        prev = QApplication.focusWidget()
         HelpDialog(self, "Co jsou data a cache?",
                    "Některé projekty pracují s velkými daty, dočasnými soubory nebo záznamy běhu (logy). "
                    "Mezipaměť (cache) jsou dočasně uložené výsledky pro zrychlení. Většinou tyto soubory do Gitu nepatří.\n\n"
@@ -79,6 +84,8 @@ class DataPage(BasePage):
                    "(EasyOCR ukládá modely do .EasyOCR/, PyTorch používá *.pth, *.pt, *.ckpt, ONNX *.onnx, Hugging Face *.safetensors). "
                    "Tento profil je volitelný – nezaškrtávejte jej, pokud mají být modely součástí repozitáře. "
                    "Neobsahuje obecné pravidlo models/, aby neignoroval legitimní zdrojové soubory.").exec()
+        if prev is not None:
+            QTimer.singleShot(0, prev.setFocus)
 
     def get_config_updates(self, config):
         s = set()

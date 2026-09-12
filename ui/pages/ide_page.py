@@ -1,4 +1,5 @@
-from PyQt6.QtWidgets import QCheckBox, QLabel, QPushButton
+from PyQt6.QtCore import QTimer, Qt
+from PyQt6.QtWidgets import QApplication, QCheckBox, QLabel, QPushButton
 from ui.pages.base_page import BasePage
 from ui.dialogs import HelpDialog
 from core.models import IDEOption
@@ -10,6 +11,7 @@ class IdePage(BasePage):
         q = QLabel("V čem programujete?")
         q.setWordWrap(True)
         q.setAccessibleName("V čem programujete?")
+        q.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.layout_.addWidget(q)
         desc = QLabel("Vyberte program, ve kterém svůj projekt upravujete.")
         desc.setWordWrap(True)
@@ -43,9 +45,11 @@ class IdePage(BasePage):
         self.layout_.addWidget(self.cb_nevim)
 
         help_btn = QPushButton("Co to znamená?")
+        help_btn.setAccessibleDescription("Zobrazit nápovědu")
         help_btn.setAccessibleName("Co to znamená? - editor")
         help_btn.clicked.connect(self.show_help)
         self.layout_.addWidget(help_btn)
+        self._help_btn = help_btn
         self.layout_.addStretch()
         self.set_first_widget(self.cb_vscode)
 
@@ -59,9 +63,12 @@ class IdePage(BasePage):
                 cb.setEnabled(True)
 
     def show_help(self):
+        prev = QApplication.focusWidget()
         HelpDialog(self, "Co je program na programování?",
                    "Jedná se o editor nebo vývojové prostředí, například Visual Studio Code nebo PyCharm. "
                    "Tyto programy vytvářejí pomocné soubory, které obvykle nepatří do Gitu. Pokud nevíte, zvolte Nevím.").exec()
+        if prev is not None:
+            QTimer.singleShot(0, prev.setFocus)
 
     def get_config_updates(self, config):
         s = set()

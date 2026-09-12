@@ -1,3 +1,5 @@
+<div lang="cs">
+
 # AccessibleGitignoreGenerator
 
 Přístupný průvodce pro tvorbu souboru `.gitignore` pro Windows s důrazem na NVDA.

@@ -1,4 +1,5 @@
-from PyQt6.QtWidgets import QRadioButton, QLabel, QPushButton, QButtonGroup
+from PyQt6.QtWidgets import QRadioButton, QLabel, QPushButton, QButtonGroup, QApplication
+from PyQt6.QtCore import QTimer, Qt
 from ui.pages.base_page import BasePage
 from ui.dialogs import HelpDialog
 from core.models import ProjectType
@@ -9,6 +10,7 @@ class ProjectTypePage(BasePage):
         super().__init__("Krok 1 – Typ projektu", parent)
         q = QLabel("Jaký typ projektu vytváříte?")
         q.setWordWrap(True)
+        q.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         q.setAccessibleName("Jaký typ projektu vytváříte?")
         self.layout_.addWidget(q)
 
@@ -47,17 +49,22 @@ class ProjectTypePage(BasePage):
 
         help_btn = QPushButton("Co to znamená?")
         help_btn.setAccessibleName("Co to znamená? - typ projektu")
+        help_btn.setAccessibleDescription("Zobrazit nápovědu k typu projektu")
         help_btn.clicked.connect(self.show_help)
         self.layout_.addWidget(help_btn)
+        self._help_btn = help_btn
         self.layout_.addStretch()
         self.set_first_widget(self.radio_python)
 
     def show_help(self):
+        prev = QApplication.focusWidget()
         dlg = HelpDialog(self, "Co je typ projektu?",
                          "Typ projektu určuje základní nastavení. Pokud tvoříte program v Pythonu, vyberte Python. "
                          "Pokud navíc používáte interaktivní dokumenty Jupyter Notebook, vyberte Python + Jupyter. "
                          "Pokud nevíte, zvolte Nevím – vytvoří se bezpečný obecný soubor.")
         dlg.exec()
+        if prev is not None:
+            QTimer.singleShot(0, prev.setFocus)
 
     def get_config_updates(self, config):
         if self.radio_python.isChecked():

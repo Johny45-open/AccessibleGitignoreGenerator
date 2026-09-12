@@ -1,4 +1,5 @@
-from PyQt6.QtWidgets import QRadioButton, QLabel, QPushButton, QButtonGroup
+from PyQt6.QtCore import QTimer, Qt
+from PyQt6.QtWidgets import QApplication, QRadioButton, QLabel, QPushButton, QButtonGroup
 from ui.pages.base_page import BasePage
 from ui.dialogs import HelpDialog
 from core.models import TestingAnswer, TestingTool
@@ -10,6 +11,7 @@ class TestingAnswerPage(BasePage):
         q = QLabel("Používáte automatické testy, které kontrolují váš program?")
         q.setWordWrap(True)
         q.setAccessibleName("Používáte automatické testy, které kontrolují váš program?")
+        q.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.layout_.addWidget(q)
         desc = QLabel("Nástroj, který automaticky kontroluje, zda části vašeho programu fungují správně.")
         desc.setWordWrap(True)
@@ -34,16 +36,21 @@ class TestingAnswerPage(BasePage):
         self.radio_nevim.setChecked(True)
 
         help_btn = QPushButton("Co to znamená?")
+        help_btn.setAccessibleDescription("Zobrazit nápovědu")
         help_btn.setAccessibleName("Co to znamená? - automatické testy")
         help_btn.clicked.connect(self.show_help)
         self.layout_.addWidget(help_btn)
+        self._help_btn = help_btn
         self.layout_.addStretch()
         self.set_first_widget(self.radio_ano)
 
     def show_help(self):
+        prev = QApplication.focusWidget()
         HelpDialog(self, "Co jsou automatické testy?",
                    "Automatické testy jsou programy, které samy kontrolují, zda váš program dělá to, co má. "
                    "Pytest je jeden z nástrojů, který se pro tyto testy v Pythonu používá.").exec()
+        if prev is not None:
+            QTimer.singleShot(0, prev.setFocus)
 
     def get_config_updates(self, config):
         if self.radio_ano.isChecked():
@@ -63,6 +70,7 @@ class TestingToolPage(BasePage):
         super().__init__("Krok 4b – Nástroj na testy", parent)
         q = QLabel("Který nástroj používáte na testy?")
         q.setWordWrap(True)
+        q.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         q.setAccessibleName("Který nástroj používáte na testy?")
         self.layout_.addWidget(q)
 

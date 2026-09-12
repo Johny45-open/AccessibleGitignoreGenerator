@@ -1,4 +1,5 @@
-from PyQt6.QtWidgets import QRadioButton, QLabel, QPushButton, QButtonGroup
+from PyQt6.QtCore import QTimer, Qt
+from PyQt6.QtWidgets import QApplication, QRadioButton, QLabel, QPushButton, QButtonGroup
 from ui.pages.base_page import BasePage
 from ui.dialogs import HelpDialog
 from core.models import BuildAnswer, BuildTool
@@ -10,6 +11,7 @@ class BuildAnswerPage(BasePage):
         q = QLabel("Vytváříte ze svého Python programu samostatný program pro Windows?")
         q.setWordWrap(True)
         q.setAccessibleName("Vytváříte ze svého Python programu samostatný program pro Windows?")
+        q.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.layout_.addWidget(q)
         desc = QLabel("Například soubor EXE, který lze spustit i bez ručního spouštění Pythonu.")
         desc.setWordWrap(True)
@@ -33,16 +35,21 @@ class BuildAnswerPage(BasePage):
         self.radio_nevim.setChecked(True)
 
         help_btn = QPushButton("Co to znamená?")
+        help_btn.setAccessibleDescription("Zobrazit nápovědu")
         help_btn.setAccessibleName("Co to znamená? - vytváření EXE")
         help_btn.clicked.connect(self.show_help)
         self.layout_.addWidget(help_btn)
+        self._help_btn = help_btn
         self.layout_.addStretch()
         self.set_first_widget(self.radio_ano)
 
     def show_help(self):
+        prev = QApplication.focusWidget()
         HelpDialog(self, "Co je vytváření EXE?",
                    "Některé nástroje umí zabalit Python program do souboru EXE, aby ho šlo spustit na Windows bez instalace Pythonu. "
                    "Například PyInstaller nebo Nuitka. Pokud nic takového neděláte, zvolte Ne.").exec()
+        if prev is not None:
+            QTimer.singleShot(0, prev.setFocus)
 
     def get_config_updates(self, config):
         if self.radio_ano.isChecked():
@@ -62,6 +69,7 @@ class BuildToolPage(BasePage):
         super().__init__("Krok 5b – Nástroj pro sestavení", parent)
         q = QLabel("Jaký nástroj používáte na vytváření programu?")
         q.setWordWrap(True)
+        q.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         q.setAccessibleName("Jaký nástroj používáte na vytváření programu?")
         self.layout_.addWidget(q)
 
